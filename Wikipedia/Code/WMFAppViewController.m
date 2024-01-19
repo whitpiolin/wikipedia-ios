@@ -1194,6 +1194,10 @@ NSString *const WMFLanguageVariantAlertsLibraryVersion = @"WMFLanguageVariantAle
                 [[self placesViewController] updateViewModeToMap];
                 [[self placesViewController] showArticleURL:articleURL];
             }
+            CLLocation *locationCoordinate = activity.wmf_locationCoordinate;
+            if (locationCoordinate) {
+                [[self placesViewController] zoomAndPanMapViewToLocation:locationCoordinate];
+            }
         } break;
         case WMFUserActivityTypeContent: {
             [self dismissPresentedViewControllers];
