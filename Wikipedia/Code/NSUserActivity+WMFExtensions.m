@@ -62,15 +62,35 @@ __attribute__((annotate("returns_localized_nsstring"))) static inline NSString *
 + (instancetype)wmf_placesActivityWithURL:(NSURL *)activityURL {
     NSURLComponents *components = [NSURLComponents componentsWithURL:activityURL resolvingAgainstBaseURL:NO];
     NSURL *articleURL = nil;
+    NSNumber *latitude = nil;
+    NSNumber *longitude = nil;
+    
     for (NSURLQueryItem *item in components.queryItems) {
         if ([item.name isEqualToString:@"WMFArticleURL"]) {
             NSString *articleURLString = item.value;
             articleURL = [NSURL URLWithString:articleURLString];
+            continue;
+        }
+        if ([item.name isEqualToString:@"latitude"]) {
+            NSString *latitudeString = item.value;
+            latitude = @([latitudeString doubleValue]);
+            continue;
+        }
+        if ([item.name isEqualToString:@"longitude"]) {
+            NSString *longitudeString = item.value;
+            longitude = @([longitudeString doubleValue]);
             break;
         }
     }
+    
     NSUserActivity *activity = [self wmf_pageActivityWithName:@"Places"];
     activity.webpageURL = articleURL;
+    
+    NSMutableDictionary *userInfo = [NSMutableDictionary new];
+    [userInfo setValue:latitude forKey:@"Latitude"];
+    [userInfo setValue:longitude forKey:@"Longitude"];
+    [activity addUserInfoEntriesFromDictionary:userInfo];
+    
     return activity;
 }
 
@@ -153,6 +173,15 @@ __attribute__((annotate("returns_localized_nsstring"))) static inline NSString *
         return nil;
     }
     return [self wmf_articleViewActivityWithURL:wikipediaURL];
+}
+
+- (CLLocation *)wmf_locationCoordinate {
+    
+    NSNumber *latitude = self.userInfo[@"Latitude"];
+    NSNumber *longitude = self.userInfo[@"Longitude"];
+    
+    return (latitude && longitude) ? [[CLLocation alloc] initWithLatitude:latitude.doubleValue longitude:longitude.doubleValue] : nil;
+    
 }
 
 + (instancetype)wmf_articleViewActivityWithURL:(NSURL *)url {
